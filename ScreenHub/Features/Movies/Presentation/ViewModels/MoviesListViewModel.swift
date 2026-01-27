@@ -17,12 +17,13 @@ final class MoviesListViewModel: ObservableObject {
 
     private let getMoviesPage: GetMoviesPageUseCase
     private var pagination = PaginationState()
-
     private var hasLoaded = false
 
     init(getMoviesPage: GetMoviesPageUseCase) {
         self.getMoviesPage = getMoviesPage
     }
+
+    // MARK: - Public API
 
     func loadInitial() async {
         guard !hasLoaded else { return }
@@ -33,7 +34,14 @@ final class MoviesListViewModel: ObservableObject {
         await loadNextPage()
     }
 
-    func loadNextPage() async {
+    func loadMoreIfNeeded(currentItemId: String) async {
+        guard currentItemId == movies.last?.id else { return }
+        await loadNextPage()
+    }
+
+    // MARK: - Pagination
+
+    private func loadNextPage() async {
         guard pagination.hasMore, !pagination.isLoading else { return }
 
         pagination.startLoadingNextPage()

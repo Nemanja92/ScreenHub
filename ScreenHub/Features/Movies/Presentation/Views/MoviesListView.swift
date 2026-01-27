@@ -8,13 +8,13 @@
 import SwiftUI
 
 struct MoviesListView: View {
-
+    
     @StateObject private var viewModel: MoviesListViewModel
-
+    
     init(viewModel: MoviesListViewModel) {
         _viewModel = StateObject(wrappedValue: viewModel)
     }
-
+    
     var body: some View {
         NavigationStack {
             content
@@ -24,14 +24,14 @@ struct MoviesListView: View {
             await viewModel.loadInitial()
         }
     }
-
+    
     @ViewBuilder
     private var content: some View {
         if let message = viewModel.errorMessage {
             VStack(spacing: 12) {
                 Text(message)
                     .multilineTextAlignment(.center)
-
+                
                 Button("Retry") {
                     Task { await viewModel.loadInitial() }
                 }
@@ -45,13 +45,13 @@ struct MoviesListView: View {
                     } label: {
                         MovieRowView(movie: movie)
                             .onAppear {
-                                if movie.id == viewModel.movies.last?.id {
-                                    Task { await viewModel.loadNextPage() }
+                                Task {
+                                    await viewModel.loadMoreIfNeeded(currentItemId: movie.id)
                                 }
                             }
                     }
                 }
-
+                
                 if viewModel.isLoading {
                     HStack {
                         Spacer()
