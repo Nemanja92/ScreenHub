@@ -19,6 +19,13 @@ struct MoviesListView: View {
         NavigationStack {
             content
                 .navigationTitle("Movies")
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        if viewModel.isLoading {
+                            ProgressView()
+                        }
+                    }
+                }
         }
         .task {
             await viewModel.loadInitial()
