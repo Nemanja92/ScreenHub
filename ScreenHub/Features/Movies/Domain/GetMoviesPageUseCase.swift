@@ -7,15 +7,6 @@
 
 import Foundation
 
-struct GetMoviesPageUseCase {
-
-    private let repository: MoviesRepository
-
-    init(repository: MoviesRepository) {
-        self.repository = repository
-    }
-
-    func execute(page: Int) async throws -> MoviesPage {
-        try await repository.getMovies(page: page)
-    }
+protocol GetMoviesPageUseCase {
+    func execute(page: Int) async throws -> MoviesPage
 }
