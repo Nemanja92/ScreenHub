@@ -14,7 +14,7 @@ enum CompositionRoot {
         let api = MoviesAPIImpl(httpClient: httpClient)
         let remoteDataSource = MoviesRemoteDataSource(api: api)
         let repository = MoviesRepositoryImpl(remoteDataSource: remoteDataSource)
-        let useCase = GetMoviesPageUseCase(repository: repository)
+        let useCase = GetMoviesPageUseCaseImpl(repository: repository)
         let viewModel = MoviesListViewModel(getMoviesPage: useCase)
 
         return MoviesListView(viewModel: viewModel)
