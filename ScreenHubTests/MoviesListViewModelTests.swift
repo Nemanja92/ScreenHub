@@ -22,7 +22,7 @@ struct MoviesListViewModelTests {
         )
 
         let repository = FakeMoviesRepository(pages: [page1])
-        let useCase = GetMoviesPageUseCase(repository: repository)
+        let useCase: GetMoviesPageUseCase = GetMoviesPageUseCaseImpl(repository: repository)
         let viewModel = MoviesListViewModel(getMoviesPage: useCase)
 
         await viewModel.loadInitial()
@@ -35,7 +35,7 @@ struct MoviesListViewModelTests {
 
     @Test
     @MainActor
-    func loadNextPage_appendsMoviesAcrossPages() async {
+    func loadMoreIfNeeded_requestsNextPage_whenLastItemAppears() async {
         let page1 = MoviesPage(
             movies: [MovieFixtures.movieA],
             page: 1,
@@ -49,11 +49,13 @@ struct MoviesListViewModelTests {
         )
 
         let repository = FakeMoviesRepository(pages: [page1, page2])
-        let useCase = GetMoviesPageUseCase(repository: repository)
+        let useCase: GetMoviesPageUseCase = GetMoviesPageUseCaseImpl(repository: repository)
         let viewModel = MoviesListViewModel(getMoviesPage: useCase)
 
         await viewModel.loadInitial()
-        await viewModel.loadNextPage()
+
+        // Trigger pagination the same way the UI does: last item appears.
+        await viewModel.loadMoreIfNeeded(currentItemId: MovieFixtures.movieA.id)
 
         #expect(viewModel.movies.map(\.id) == [
             MovieFixtures.movieA.id,
@@ -100,8 +102,8 @@ private enum MovieFixtures {
         runtimeMinutes: 120,
         genres: ["Drama"],
         plot: "Test plot A",
-        posterUrl: "https://example.com/a.jpg",
-        trailerUrl: "https://example.com/a.mp4",
+        posterUrl: URL(string: "https://example.com/a.jpg"),
+        trailerUrl: URL(string: "https://example.com/a.mp4"),
         rating: 8.5,
         directors: ["Director A"],
         cast: ["Actor A"],
@@ -115,8 +117,8 @@ private enum MovieFixtures {
         runtimeMinutes: 110,
         genres: ["Action"],
         plot: "Test plot B",
-        posterUrl: "https://example.com/b.jpg",
-        trailerUrl: "https://example.com/b.mp4",
+        posterUrl: URL(string: "https://example.com/b.jpg"),
+        trailerUrl: URL(string: "https://example.com/b.mp4"),
         rating: 7.9,
         directors: ["Director B"],
         cast: ["Actor B"],
