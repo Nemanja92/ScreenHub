@@ -96,11 +96,13 @@ Some intentional decisions made for this demo:
 
 If this were to evolve further, the next steps would likely be:
 
-- Introduce DTOs and mapping once API and domain models diverge
+- Introduce DTOs and mapping
 - Add image caching and prefetching
 - Expand test coverage to include error and cancellation scenarios
 - Support filtering and task cancellation using `.task(id:)`
 - Add offline caching or persistence if required
+- Add localization support
+- Extract navigation logic into a dedicated coordinator if navigation complexity grows
 
 ---
 
