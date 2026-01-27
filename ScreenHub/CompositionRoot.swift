@@ -10,13 +10,41 @@ import SwiftUI
 enum CompositionRoot {
 
     static func makeMoviesListView() -> some View {
-        let httpClient = HTTPClient()
-        let api = MoviesAPIImpl(httpClient: httpClient)
-        let remoteDataSource = MoviesRemoteDataSource(api: api)
-        let repository = MoviesRepositoryImpl(remoteDataSource: remoteDataSource)
-        let useCase = GetMoviesPageUseCaseImpl(repository: repository)
-        let viewModel = MoviesListViewModel(getMoviesPage: useCase)
+        MoviesListView(viewModel: makeMoviesListViewModel())
+    }
 
-        return MoviesListView(viewModel: viewModel)
+    // MARK: - ViewModels
+
+    @MainActor
+    static func makeMoviesListViewModel() -> MoviesListViewModel {
+        MoviesListViewModel(getMoviesPage: makeGetMoviesPageUseCase())
+    }
+
+    // MARK: - UseCases
+
+    static func makeGetMoviesPageUseCase() -> GetMoviesPageUseCase {
+        GetMoviesPageUseCaseImpl(repository: makeMoviesRepository())
+    }
+
+    // MARK: - Repositories
+
+    static func makeMoviesRepository() -> MoviesRepository {
+        MoviesRepositoryImpl(remoteDataSource: makeMoviesRemoteDataSource())
+    }
+
+    // MARK: - DataSources
+
+    static func makeMoviesRemoteDataSource() -> MoviesRemoteDataSource {
+        MoviesRemoteDataSource(api: makeMoviesAPI())
+    }
+
+    // MARK: - API / Infrastructure
+
+    static func makeMoviesAPI() -> MoviesAPI {
+        MoviesAPIImpl(httpClient: makeHTTPClient())
+    }
+
+    static func makeHTTPClient() -> HTTPClient {
+        HTTPClient()
     }
 }
