@@ -9,9 +9,10 @@ import SwiftUI
 
 @main
 struct ScreenHubApp: App {
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            CompositionRoot.makeMoviesListView()
         }
     }
 }
