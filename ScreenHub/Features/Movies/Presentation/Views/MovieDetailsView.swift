@@ -15,7 +15,7 @@ struct MovieDetailsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
 
-                AsyncImage(url: URL(string: movie.posterUrl)) { image in
+                AsyncImage(url: movie.posterUrl) { image in
                     image
                         .resizable()
                         .scaledToFit()

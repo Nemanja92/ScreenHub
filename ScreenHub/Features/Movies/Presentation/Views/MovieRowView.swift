@@ -13,7 +13,7 @@ struct MovieRowView: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            AsyncImage(url: URL(string: movie.posterUrl)) { image in
+            AsyncImage(url: movie.posterUrl) { image in
                 image
                     .resizable()
                     .scaledToFill()

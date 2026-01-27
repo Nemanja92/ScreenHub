@@ -14,8 +14,8 @@ struct Movie: Decodable, Identifiable, Equatable {
     let runtimeMinutes: Int
     let genres: [String]
     let plot: String
-    let posterUrl: String
-    let trailerUrl: String
+    let posterUrl: URL?
+    let trailerUrl: URL?
     let rating: Double
     let directors: [String]
     let cast: [String]
