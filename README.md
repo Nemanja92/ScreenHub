@@ -114,5 +114,3 @@ The focus is on:
 - safe async handling
 - predictable SwiftUI behavior
 
-It is designed to be easy to read, easy to reason about, and easy to extend.
-
