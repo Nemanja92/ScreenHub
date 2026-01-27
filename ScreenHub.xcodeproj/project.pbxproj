@@ -6,8 +6,19 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		96C2EAC92F28447D00E16375 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 96C2EA732F283C4400E16375 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 96C2EA7A2F283C4400E16375;
+			remoteInfo = ScreenHub;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		96C2EA7B2F283C4400E16375 /* ScreenHub.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ScreenHub.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		96C2EAC52F28447D00E16375 /* ScreenHubTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ScreenHubTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -16,10 +27,22 @@
 			path = ScreenHub;
 			sourceTree = "<group>";
 		};
+		96C2EAC62F28447D00E16375 /* ScreenHubTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = ScreenHubTests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		96C2EA782F283C4400E16375 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		96C2EAC22F28447D00E16375 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -33,6 +56,7 @@
 			isa = PBXGroup;
 			children = (
 				96C2EA7D2F283C4400E16375 /* ScreenHub */,
+				96C2EAC62F28447D00E16375 /* ScreenHubTests */,
 				96C2EA7C2F283C4400E16375 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +65,7 @@
 			isa = PBXGroup;
 			children = (
 				96C2EA7B2F283C4400E16375 /* ScreenHub.app */,
+				96C2EAC52F28447D00E16375 /* ScreenHubTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -70,6 +95,29 @@
 			productReference = 96C2EA7B2F283C4400E16375 /* ScreenHub.app */;
 			productType = "com.apple.product-type.application";
 		};
+		96C2EAC42F28447D00E16375 /* ScreenHubTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 96C2EACB2F28447D00E16375 /* Build configuration list for PBXNativeTarget "ScreenHubTests" */;
+			buildPhases = (
+				96C2EAC12F28447D00E16375 /* Sources */,
+				96C2EAC22F28447D00E16375 /* Frameworks */,
+				96C2EAC32F28447D00E16375 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				96C2EACA2F28447D00E16375 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				96C2EAC62F28447D00E16375 /* ScreenHubTests */,
+			);
+			name = ScreenHubTests;
+			packageProductDependencies = (
+			);
+			productName = ScreenHubTests;
+			productReference = 96C2EAC52F28447D00E16375 /* ScreenHubTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -82,6 +130,11 @@
 				TargetAttributes = {
 					96C2EA7A2F283C4400E16375 = {
 						CreatedOnToolsVersion = 26.2;
+					};
+					96C2EAC42F28447D00E16375 = {
+						CreatedOnToolsVersion = 26.2;
+						LastSwiftMigration = 2620;
+						TestTargetID = 96C2EA7A2F283C4400E16375;
 					};
 				};
 			};
@@ -100,12 +153,20 @@
 			projectRoot = "";
 			targets = (
 				96C2EA7A2F283C4400E16375 /* ScreenHub */,
+				96C2EAC42F28447D00E16375 /* ScreenHubTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		96C2EA792F283C4400E16375 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		96C2EAC32F28447D00E16375 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -122,7 +183,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		96C2EAC12F28447D00E16375 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		96C2EACA2F28447D00E16375 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 96C2EA7A2F283C4400E16375 /* ScreenHub */;
+			targetProxy = 96C2EAC92F28447D00E16375 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		96C2EA842F283C4500E16375 /* Debug */ = {
@@ -306,6 +382,49 @@
 			};
 			name = Release;
 		};
+		96C2EACC2F28447D00E16375 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = nemanja.com.ScreenHubTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ScreenHub.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ScreenHub";
+			};
+			name = Debug;
+		};
+		96C2EACD2F28447D00E16375 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = nemanja.com.ScreenHubTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ScreenHub.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ScreenHub";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -323,6 +442,15 @@
 			buildConfigurations = (
 				96C2EA872F283C4500E16375 /* Debug */,
 				96C2EA882F283C4500E16375 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		96C2EACB2F28447D00E16375 /* Build configuration list for PBXNativeTarget "ScreenHubTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				96C2EACC2F28447D00E16375 /* Debug */,
+				96C2EACD2F28447D00E16375 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
