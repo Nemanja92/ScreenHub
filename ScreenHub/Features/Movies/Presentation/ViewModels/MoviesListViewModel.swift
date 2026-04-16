@@ -25,6 +25,7 @@ final class MoviesListViewModel {
     private(set) var loadState: LoadState = .idle
     private(set) var currentPage: Int = 0
     private(set) var hasMore: Bool = true
+    private(set) var paginationErrorMessage: String?
 
     private var hasAttemptedInitialLoad = false
 
@@ -42,10 +43,16 @@ final class MoviesListViewModel {
         await reloadFromStart()
     }
 
+    func retryLoadMore() async {
+        guard let lastMovie = movies.last else { return }
+        await loadMoreIfNeeded(currentItem: lastMovie)
+    }
+
     func loadMoreIfNeeded(currentItem: Movie) async {
         guard shouldLoadMore(for: currentItem) else { return }
 
         loadState = .loadingNextPage
+        paginationErrorMessage = nil
 
         do {
             let nextPage = currentPage + 1
@@ -56,7 +63,8 @@ final class MoviesListViewModel {
             hasMore = response.hasMore
             loadState = .loaded
         } catch {
-            loadState = .failed("Failed to load more movies.")
+            loadState = .loaded
+            paginationErrorMessage = "Failed to load more movies."
         }
     }
 
@@ -64,6 +72,7 @@ final class MoviesListViewModel {
         guard loadState != .loading else { return }
 
         loadState = .loading
+        paginationErrorMessage = nil
         movies = []
         currentPage = 0
         hasMore = true

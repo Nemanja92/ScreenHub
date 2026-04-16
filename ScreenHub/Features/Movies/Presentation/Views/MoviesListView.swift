@@ -12,7 +12,7 @@ struct MoviesListView: View {
     @State private var viewModel: MoviesListViewModel
     
     init(viewModel: MoviesListViewModel) {
-        _viewModel = State(wrappedValue: viewModel)
+        _viewModel = State(initialValue: viewModel)
     }
     
     var body: some View {
@@ -80,6 +80,27 @@ struct MoviesListView: View {
                     ProgressView()
                     Spacer()
                 }
+                .padding(.vertical, 8)
+                .listRowSeparator(.hidden)
+            }
+            
+            if let message = viewModel.paginationErrorMessage {
+                VStack(spacing: 8) {
+                    Text(message)
+                        .font(.footnote)
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(.secondary)
+                    
+                    Button("Try Again") {
+                        Task {
+                            await viewModel.retryLoadMore()
+                        }
+                    }
+                    .buttonStyle(.borderless)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
+                .listRowSeparator(.hidden)
             }
         }
     }
