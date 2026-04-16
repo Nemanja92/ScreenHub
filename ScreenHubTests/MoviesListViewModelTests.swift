@@ -29,8 +29,11 @@ struct MoviesListViewModelTests {
 
         #expect(viewModel.movies.count == 1)
         #expect(viewModel.movies.first?.id == MovieFixtures.movieA.id)
+        #expect(viewModel.currentPage == 1)
+        #expect(viewModel.hasMore == true)
+        #expect(viewModel.loadState == .loaded)
         #expect(repository.requestedPages == [1])
-        #expect(viewModel.errorMessage == nil)
+        #expect(viewModel.paginationErrorMessage == nil)
     }
 
     @Test
@@ -53,17 +56,99 @@ struct MoviesListViewModelTests {
         let viewModel = MoviesListViewModel(getMoviesPage: useCase)
 
         await viewModel.loadInitial()
-
-        // Trigger pagination the same way the UI does: last item appears.
-        await viewModel.loadMoreIfNeeded(currentItemId: MovieFixtures.movieA.id)
+        await viewModel.loadMoreIfNeeded(currentItem: MovieFixtures.movieA)
 
         #expect(viewModel.movies.map(\.id) == [
             MovieFixtures.movieA.id,
             MovieFixtures.movieB.id
         ])
-
+        #expect(viewModel.currentPage == 2)
+        #expect(viewModel.hasMore == false)
+        #expect(viewModel.loadState == .loaded)
         #expect(repository.requestedPages == [1, 2])
-        #expect(viewModel.errorMessage == nil)
+        #expect(viewModel.paginationErrorMessage == nil)
+    }
+
+    @Test
+    @MainActor
+    func loadMoreIfNeeded_doesNothing_whenHasMoreIsFalse() async {
+        let page1 = MoviesPage(
+            movies: [MovieFixtures.movieA],
+            page: 1,
+            hasMore: false
+        )
+
+        let repository = FakeMoviesRepository(pages: [page1])
+        let useCase: GetMoviesPageUseCase = GetMoviesPageUseCaseImpl(repository: repository)
+        let viewModel = MoviesListViewModel(getMoviesPage: useCase)
+
+        await viewModel.loadInitial()
+        await viewModel.loadMoreIfNeeded(currentItem: MovieFixtures.movieA)
+
+        #expect(viewModel.movies.map(\.id) == [MovieFixtures.movieA.id])
+        #expect(viewModel.currentPage == 1)
+        #expect(viewModel.hasMore == false)
+        #expect(viewModel.loadState == .loaded)
+        #expect(repository.requestedPages == [1])
+        #expect(viewModel.paginationErrorMessage == nil)
+    }
+
+    @Test
+    @MainActor
+    func loadMoreIfNeeded_keepsExistingMovies_whenNextPageFails() async {
+        let page1 = MoviesPage(
+            movies: [MovieFixtures.movieA],
+            page: 1,
+            hasMore: true
+        )
+
+        let repository = FakeMoviesRepository(
+            pages: [page1],
+            failingPages: [2]
+        )
+        let useCase: GetMoviesPageUseCase = GetMoviesPageUseCaseImpl(repository: repository)
+        let viewModel = MoviesListViewModel(getMoviesPage: useCase)
+
+        await viewModel.loadInitial()
+        await viewModel.loadMoreIfNeeded(currentItem: MovieFixtures.movieA)
+
+        #expect(viewModel.movies.map(\.id) == [MovieFixtures.movieA.id])
+        #expect(viewModel.currentPage == 1)
+        #expect(viewModel.hasMore == true)
+        #expect(viewModel.loadState == .loaded)
+        #expect(repository.requestedPages == [1, 2])
+        #expect(viewModel.paginationErrorMessage == "Failed to load more movies.")
+    }
+
+    @Test
+    @MainActor
+    func retryInitialLoad_loadsFirstPageAfterFailure() async {
+        let page1 = MoviesPage(
+            movies: [MovieFixtures.movieA],
+            page: 1,
+            hasMore: true
+        )
+
+        let repository = FakeMoviesRepository(
+            pages: [page1],
+            failingPages: [1],
+            failOnlyOnce: true
+        )
+        let useCase: GetMoviesPageUseCase = GetMoviesPageUseCaseImpl(repository: repository)
+        let viewModel = MoviesListViewModel(getMoviesPage: useCase)
+
+        await viewModel.loadInitial()
+
+        #expect(viewModel.loadState == .failed("Failed to load movies."))
+        #expect(viewModel.movies.isEmpty)
+
+        await viewModel.retryInitialLoad()
+
+        #expect(viewModel.movies.map(\.id) == [MovieFixtures.movieA.id])
+        #expect(viewModel.currentPage == 1)
+        #expect(viewModel.hasMore == true)
+        #expect(viewModel.loadState == .loaded)
+        #expect(repository.requestedPages == [1, 1])
     }
 }
 
@@ -71,19 +156,45 @@ struct MoviesListViewModelTests {
 // MARK: - Test Doubles
 //
 
+private enum FakeRepositoryError: Error {
+    case forcedFailure
+}
+
 private final class FakeMoviesRepository: MoviesRepository {
 
     private let pagesByNumber: [Int: MoviesPage]
+    private let failingPages: Set<Int>
+    private let failOnlyOnce: Bool
+    private var alreadyFailedPages: Set<Int> = []
+
     private(set) var requestedPages: [Int] = []
 
-    init(pages: [MoviesPage]) {
+    init(
+        pages: [MoviesPage],
+        failingPages: Set<Int> = [],
+        failOnlyOnce: Bool = false
+    ) {
         self.pagesByNumber = Dictionary(
             uniqueKeysWithValues: pages.map { ($0.page, $0) }
         )
+        self.failingPages = failingPages
+        self.failOnlyOnce = failOnlyOnce
     }
 
     func getMovies(page: Int) async throws -> MoviesPage {
         requestedPages.append(page)
+
+        if failingPages.contains(page) {
+            if failOnlyOnce {
+                if !alreadyFailedPages.contains(page) {
+                    alreadyFailedPages.insert(page)
+                    throw FakeRepositoryError.forcedFailure
+                }
+            } else {
+                throw FakeRepositoryError.forcedFailure
+            }
+        }
+
         return pagesByNumber[page]
             ?? MoviesPage(movies: [], page: page, hasMore: false)
     }
