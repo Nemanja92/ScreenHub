@@ -6,58 +6,85 @@
 //
 
 import Foundation
-import Combine
+import Observation
+
+enum LoadState: Equatable {
+    case idle
+    case loading
+    case loaded
+    case loadingNextPage
+    case failed(String)
+}
 
 @MainActor
-final class MoviesListViewModel: ObservableObject {
-
-    @Published private(set) var movies: [Movie] = []
-    @Published private(set) var isLoading: Bool = false
-    @Published private(set) var errorMessage: String?
-
+@Observable
+final class MoviesListViewModel {
     private let getMoviesPage: GetMoviesPageUseCase
-    private var pagination = PaginationState()
-    private var hasLoaded = false
+
+    private(set) var movies: [Movie] = []
+    private(set) var loadState: LoadState = .idle
+    private(set) var currentPage: Int = 0
+    private(set) var hasMore: Bool = true
+
+    private var hasAttemptedInitialLoad = false
 
     init(getMoviesPage: GetMoviesPageUseCase) {
         self.getMoviesPage = getMoviesPage
     }
 
-    // MARK: - Public API
-
     func loadInitial() async {
-        guard !hasLoaded else { return }
-        hasLoaded = true
-
-        pagination.reset()
-        movies = []
-        await loadNextPage()
+        guard !hasAttemptedInitialLoad else { return }
+        hasAttemptedInitialLoad = true
+        await reloadFromStart()
     }
 
-    func loadMoreIfNeeded(currentItemId: String) async {
-        guard currentItemId == movies.last?.id else { return }
-        await loadNextPage()
+    func retryInitialLoad() async {
+        await reloadFromStart()
     }
 
-    // MARK: - Pagination
+    func loadMoreIfNeeded(currentItem: Movie) async {
+        guard shouldLoadMore(for: currentItem) else { return }
 
-    private func loadNextPage() async {
-        guard pagination.hasMore, !pagination.isLoading else { return }
-
-        pagination.startLoadingNextPage()
-        isLoading = true
-        errorMessage = nil
+        loadState = .loadingNextPage
 
         do {
-            let nextPage = pagination.currentPage + 1
-            let page = try await getMoviesPage.execute(page: nextPage)
-            movies.append(contentsOf: page.movies)
-            pagination.finishLoading(page: page.page, hasMore: page.hasMore)
-        } catch {
-            errorMessage = error.localizedDescription
-            pagination.isLoading = false
-        }
+            let nextPage = currentPage + 1
+            let response = try await getMoviesPage.execute(page: nextPage)
 
-        isLoading = false
+            movies.append(contentsOf: response.movies)
+            currentPage = response.page
+            hasMore = response.hasMore
+            loadState = .loaded
+        } catch {
+            loadState = .failed("Failed to load more movies.")
+        }
+    }
+
+    private func reloadFromStart() async {
+        guard loadState != .loading else { return }
+
+        loadState = .loading
+        movies = []
+        currentPage = 0
+        hasMore = true
+
+        do {
+            let response = try await getMoviesPage.execute(page: 1)
+
+            movies = response.movies
+            currentPage = response.page
+            hasMore = response.hasMore
+            loadState = .loaded
+        } catch {
+            loadState = .failed("Failed to load movies.")
+        }
+    }
+
+    private func shouldLoadMore(for currentItem: Movie) -> Bool {
+        guard hasMore else { return false }
+        guard loadState != .loading else { return false }
+        guard loadState != .loadingNextPage else { return false }
+        guard movies.last?.id == currentItem.id else { return false }
+        return true
     }
 }

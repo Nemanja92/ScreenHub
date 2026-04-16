@@ -7,21 +7,19 @@
 
 import Foundation
 
-final class MoviesRemoteDataSource {
+protocol MoviesRemoteDataSource {
+    func fetch(page: Int) async throws -> MoviesPage
+}
 
-    // maxPage is hardcoded to match the demo API setup,
-    // which exposes a fixed number of paged JSON files.
-    // In a real backend-driven API, this value would be provided dynamically.
+final class MoviesRemoteDataSourceImpl: MoviesRemoteDataSource {
+
     private let api: MoviesAPI
-    private let maxPage: Int = 3
 
     init(api: MoviesAPI) {
         self.api = api
     }
 
-    func fetchMoviesPage(page: Int) async throws -> MoviesPage {
-        let movies = try await api.fetchMovies(page: page)
-        let hasMore = page < maxPage && !movies.isEmpty
-        return MoviesPage(movies: movies, page: page, hasMore: hasMore)
+    func fetch(page: Int) async throws -> MoviesPage {
+        try await api.fetchMoviesPage(page: page)
     }
 }

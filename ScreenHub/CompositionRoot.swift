@@ -35,7 +35,7 @@ enum CompositionRoot {
     // MARK: - DataSources
 
     static func makeMoviesRemoteDataSource() -> MoviesRemoteDataSource {
-        MoviesRemoteDataSource(api: makeMoviesAPI())
+        MoviesRemoteDataSourceImpl(api: makeMoviesAPI())
     }
 
     // MARK: - API / Infrastructure

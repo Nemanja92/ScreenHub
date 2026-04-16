@@ -16,6 +16,6 @@ final class MoviesRepositoryImpl: MoviesRepository {
     }
 
     func getMovies(page: Int) async throws -> MoviesPage {
-        try await remoteDataSource.fetchMoviesPage(page: page)
+        try await remoteDataSource.fetch(page: page)
     }
 }

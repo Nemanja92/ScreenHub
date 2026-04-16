@@ -7,8 +7,14 @@
 
 import Foundation
 
-struct MoviesPage: Equatable {
+struct MoviesPage: Decodable, Sendable {
     let movies: [Movie]
     let page: Int
     let hasMore: Bool
+
+    private enum CodingKeys: String, CodingKey {
+        case movies
+        case page
+        case hasMore = "hasNextPage"
+    }
 }

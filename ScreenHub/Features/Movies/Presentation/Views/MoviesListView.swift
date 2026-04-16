@@ -9,23 +9,16 @@ import SwiftUI
 
 struct MoviesListView: View {
     
-    @StateObject private var viewModel: MoviesListViewModel
+    @State private var viewModel: MoviesListViewModel
     
     init(viewModel: MoviesListViewModel) {
-        _viewModel = StateObject(wrappedValue: viewModel)
+        _viewModel = State(wrappedValue: viewModel)
     }
     
     var body: some View {
         NavigationStack {
             content
                 .navigationTitle("Movies")
-                .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        if viewModel.isLoading {
-                            ProgressView()
-                        }
-                    }
-                }
         }
         .task {
             await viewModel.loadInitial()
@@ -34,37 +27,58 @@ struct MoviesListView: View {
     
     @ViewBuilder
     private var content: some View {
-        if let message = viewModel.errorMessage {
-            VStack(spacing: 12) {
-                Text(message)
-                    .multilineTextAlignment(.center)
-                
-                Button("Retry") {
-                    Task { await viewModel.loadInitial() }
+        switch viewModel.loadState {
+        case .idle, .loading:
+            loadingView
+            
+        case .failed(let message):
+            errorView(message: message)
+            
+        case .loaded, .loadingNextPage:
+            moviesListView
+        }
+    }
+    
+    private var loadingView: some View {
+        ProgressView()
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+    
+    private func errorView(message: String) -> some View {
+        VStack(spacing: 12) {
+            Text(message)
+                .multilineTextAlignment(.center)
+            
+            Button("Retry") {
+                Task {
+                    await viewModel.retryInitialLoad()
                 }
             }
-            .padding()
-        } else {
-            List {
-                ForEach(viewModel.movies) { movie in
-                    NavigationLink {
-                        MovieDetailsView(movie: movie)
-                    } label: {
-                        MovieRowView(movie: movie)
-                            .onAppear {
-                                Task {
-                                    await viewModel.loadMoreIfNeeded(currentItemId: movie.id)
-                                }
+        }
+        .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+    
+    private var moviesListView: some View {
+        List {
+            ForEach(viewModel.movies) { movie in
+                NavigationLink {
+                    MovieDetailsView(movie: movie)
+                } label: {
+                    MovieRowView(movie: movie)
+                        .onAppear {
+                            Task {
+                                await viewModel.loadMoreIfNeeded(currentItem: movie)
                             }
-                    }
+                        }
                 }
-                
-                if viewModel.isLoading {
-                    HStack {
-                        Spacer()
-                        ProgressView()
-                        Spacer()
-                    }
+            }
+            
+            if viewModel.loadState == .loadingNextPage {
+                HStack {
+                    Spacer()
+                    ProgressView()
+                    Spacer()
                 }
             }
         }

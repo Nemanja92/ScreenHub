@@ -8,7 +8,7 @@
 import Foundation
 
 protocol MoviesAPI {
-    func fetchMovies(page: Int) async throws -> [Movie]
+    func fetchMoviesPage(page: Int) async throws -> MoviesPage
 }
 
 final class MoviesAPIImpl: MoviesAPI {
@@ -24,8 +24,10 @@ final class MoviesAPIImpl: MoviesAPI {
         self.baseURL = baseURL
     }
 
-    func fetchMovies(page: Int) async throws -> [Movie] {
-        guard page > 0 else { return [] }
+    func fetchMoviesPage(page: Int) async throws -> MoviesPage {
+        guard page > 0 else {
+            return MoviesPage(movies: [], page: page, hasMore: false)
+        }
 
         let url = baseURL.appendingPathComponent("movies_page_\(page).json")
         return try await httpClient.get(url)
