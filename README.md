@@ -1,116 +1,126 @@
 # ScreenHub
 
-ScreenHub is a small SwiftUI demo app focused on a common real-world problem:  
-**building a paginated movie list using async/await with clean, testable architecture**.
+ScreenHub is a small iOS demo app for browsing a paginated list of movies and viewing basic details for each title.
 
-The goal of this project is not feature completeness, but clarity:
-- how data flows through the app
-- how async state is managed
-- how common SwiftUI pitfalls are avoided
+The goal of the project is not feature breadth, but to demonstrate a clean, readable SwiftUI codebase with layered architecture, async data loading, pagination, error handling, and a lightweight composition root.
 
----
+<p align="center">
+  <img src="Screenshots/screenhub-home.gif" alt="ScreenHub home demo" width="220" />
+</p>
 
-## What the app does
+## Highlights
 
-- Displays a list of movies fetched from a paged API
-- Supports infinite scrolling (pagination)
-- Shows a movie details screen
-- Uses SwiftUI + async/await throughout
-- Includes focused Swift Testing coverage for pagination logic
+- SwiftUI-based UI
+- Layered architecture across Presentation, Domain, and Data
+- Dependency injection through a lightweight composition root
+- Async/await-based networking
+- Paginated loading with server-provided paging metadata
+- Separate handling for initial load failures and next-page failures
+- Unit tests for key view model pagination flows
 
-The backend is intentionally simple and served via static JSON files, with pagination handled through page-specific endpoints.
+## Architecture
 
----
+The project is intentionally split into a few small layers to keep responsibilities clear and the code easy to follow:
 
-## Architecture overview
+- **Presentation** contains SwiftUI views and view models
+- **Domain** contains core models, repository contracts, and use cases
+- **Data** contains the API layer, remote data source, repository implementation, and infrastructure concerns
 
-The project follows a **lightweight Clean Architecture** approach:
-View → ViewModel → Use Case → Repository → Remote Data Source → HTTP Client
+This keeps the flow straightforward:
 
-### Why this structure?
+- the view triggers the view model
+- the view model uses a use case
+- the use case calls the repository
+- the repository uses the remote data source
+- the remote data source calls the API client
 
-- Keeps UI code simple and declarative
-- Isolates async and pagination logic in the ViewModel
-- Makes data access testable and replaceable
-- Scales naturally if more features or data sources are added
+## Pagination
 
-Even though the app itself is small, this structure mirrors patterns commonly used in production apps.
+For the demo API, the app uses static JSON files hosted in a separate repo: [screenhub-demo-api](https://github.com/Nemanja92/screenhub-demo-api/).
 
----
+Each response returns:
 
-## Dependency injection
+- `page`
+- `hasNextPage`
+- `movies`
 
-Dependencies are wired using a **factory-style composition root** (`CompositionRoot.swift`).
+This allows the app to stop pagination based on server metadata instead of relying on a hardcoded max page in the client.
 
-This keeps dependencies:
-- explicit
-- easy to follow
-- free of global state or heavy DI containers
+## Key Parts
 
-For a small app, this may look slightly more structured than strictly necessary, but it demonstrates how the app would scale without introducing complexity early.
+- `CompositionRoot.swift`  
+  Wires the feature together and creates the dependency graph
 
----
+- `MoviesListViewModel.swift`  
+  Manages initial loading, next-page loading, and retry behavior
 
-## Pagination behavior
+- `MoviesAPI.swift`  
+  Fetches and decodes paginated movie responses
 
-- Pagination is triggered when the last list item appears
-- Duplicate fetches are prevented using internal loading guards
-- The initial load is protected with a `hasLoaded` guard to avoid unintended reloads when navigating back from the details screen
+- `MoviesRemoteDataSource.swift`  
+  Provides a small abstraction over the remote API layer
 
-Since the demo API returns plain lists (no paging metadata), pagination state is derived client-side. In a real backend-driven API, this information would typically be provided by the server.
+- `MoviesRepository.swift`  
+  Exposes paginated movie fetching to the domain layer
 
----
+- `MoviesListView.swift`  
+  Renders the list, full-screen loading/error states, and the next-page loading/error footer
+
+## Error Handling
+
+The app treats the two main failure scenarios differently:
+
+- **Initial load failure** shows a full-screen error state with retry
+- **Next page failure** keeps already loaded content on screen and shows retry UI at the bottom of the list
+
+This makes the pagination behavior feel closer to a real product experience.
 
 ## Testing
 
-The project includes a small **Swift Testing** suite focused on:
+The included tests focus on view model behavior, including:
 
-- async pagination behavior
-- view model state changes
+- initial page loading
+- loading the next page when the last item appears
+- stopping pagination when there are no more pages
+- keeping already loaded content when next-page loading fails
+- retrying the initial load after failure
 
-UI rendering is intentionally excluded from tests to keep them:
-- fast
-- deterministic
-- behavior-focused
+## Trade-offs
 
-This reflects how pagination and async state would typically be validated in a production codebase.
+A few implementation decisions are intentionally lightweight to keep the project focused and easy to review:
 
----
+- **`Movie` is used both as the decoded API model and the app model**  
+  For a small demo, this keeps the code simpler and avoids introducing DTO-to-domain mapping noise. In a larger production system, I would likely separate remote DTOs from domain models once API-specific concerns start diverging from app-facing needs.
 
-## Design trade-offs
+- **Image loading is intentionally simple**  
+  Poster images are loaded directly in the UI layer. A production app would likely use a more explicit image pipeline or caching strategy where appropriate for better control over memory usage, caching behavior, placeholders, and request deduplication.
 
-Some intentional decisions made for this demo:
+- **The demo backend uses static JSON files**  
+  This keeps the project easy to run and review while still demonstrating a realistic paginated contract and async loading flow.
 
-- **Single Movie model (no DTO yet)**  
-  The API response matches UI needs closely. DTOs would be introduced once transformations or multiple data sources are needed.
+- **The architecture is lightweight by design**  
+  The project uses clear boundaries and dependency injection, but avoids adding complexity that would not provide much value for a small demo.
 
-- **No image caching layer**  
-  `AsyncImage` is sufficient for a demo. A real app would use a dedicated image cache.
+## Why This Project
 
-- **Minimal error handling UI**  
-  Error handling is present but kept simple to avoid distracting from core logic.
+This project was built as a focused demo to show:
 
----
+- clean layering and dependency flow
+- pagination driven by server response metadata
+- practical async state handling in SwiftUI
+- clear retry behavior for different failure scenarios
+- testable screen logic without over-engineering
 
-## Potential improvements
+## Possible Next Steps
 
-If this were to evolve further, the next steps would likely be:
+A few natural improvements I would consider if this were expanded further:
 
-- Introduce DTOs and mapping
-- Add image caching and prefetching
-- Expand test coverage to include error and cancellation scenarios
-- Support filtering and task cancellation using `.task(id:)`
-- Add offline caching or persistence if required
-- Add localization support
-- Extract navigation logic into a dedicated coordinator if navigation complexity grows
+- add pull to refresh
+- add search support
+- introduce a more explicit image caching pipeline where it provides clear value
+- separate API DTOs from app-facing domain models if the contract grows more complex
+- add persistence or offline support if the product requirements called for it
 
----
+## Notes
 
-## Summary
-
-This project is intentionally small, but built with production patterns in mind.
-The focus is on:
-- clean data flow
-- safe async handling
-- predictable SwiftUI behavior
-
+This is intentionally a small demo project. It avoids persistence, offline support, advanced search/filtering, pull to refresh, and a dedicated image caching pipeline so the core architecture and loading flow remain easy to review at a glance.
