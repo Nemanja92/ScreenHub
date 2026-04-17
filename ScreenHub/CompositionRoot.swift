@@ -19,7 +19,8 @@ enum CompositionRoot {
     static func makeMoviesListViewModel() -> MoviesListViewModel {
         MoviesListViewModel(
             getMoviesPage: makeGetMoviesPageUseCase(),
-            searchMovies: makeSearchMoviesUseCase()
+            searchMovies: makeSearchMoviesUseCase(),
+            filterMovies: makeFilterMovieUseCase()
         )
     }
 
@@ -31,6 +32,10 @@ enum CompositionRoot {
 
     static func makeSearchMoviesUseCase() -> SearchMovieUseCase {
         SearchMovieUseCaseImpl()
+    }
+    
+    static func makeFilterMovieUseCase() -> FilterMovieUseCase {
+        FilterMovieUseCaseImpl()
     }
 
     // MARK: - Repositories

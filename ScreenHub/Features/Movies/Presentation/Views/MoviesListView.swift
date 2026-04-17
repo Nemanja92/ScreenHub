@@ -11,6 +11,8 @@ import Observation
 struct MoviesListView: View {
     
     @State private var viewModel: MoviesListViewModel
+    @State private var isShowingFilterSheet = false
+    @State private var draftFilter = MoviesFilter()
     
     init(viewModel: MoviesListViewModel) {
         _viewModel = State(initialValue: viewModel)
@@ -23,6 +25,22 @@ struct MoviesListView: View {
             content
                 .navigationTitle("Movies")
                 .searchable(text: $bindableViewModel.searchText, prompt: "Search movies")
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            draftFilter = viewModel.filter
+                            isShowingFilterSheet = true
+                        } label: {
+                            Image(systemName: "line.3.horizontal.decrease.circle")
+                        }
+                    }
+                }
+        }
+        .sheet(isPresented: $isShowingFilterSheet) {
+            FilterView(filter: $draftFilter) {
+                viewModel.updateFilter(draftFilter)
+                isShowingFilterSheet = false
+            }
         }
         .task {
             await viewModel.loadInitial()
@@ -72,7 +90,7 @@ struct MoviesListView: View {
             Text("No results")
                 .font(.headline)
             
-            Text("No movies found for \"\(viewModel.searchText)\"")
+            Text("No movies match your current criteria.")
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
         }
@@ -128,6 +146,9 @@ struct MoviesListView: View {
     
     private var shouldShowNoResults: Bool {
         let trimmedQuery = viewModel.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        return viewModel.movies.isEmpty && !trimmedQuery.isEmpty
+        let hasActiveSearch = !trimmedQuery.isEmpty
+        let hasActiveFilter = viewModel.filter.minimumRating > 0
+
+        return viewModel.movies.isEmpty && (hasActiveSearch || hasActiveFilter)
     }
 }

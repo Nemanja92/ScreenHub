@@ -21,10 +21,12 @@ enum LoadState: Equatable {
 final class MoviesListViewModel {
     private let getMoviesPage: GetMoviesPageUseCase
     private let searchMovies: SearchMovieUseCase
+    private let filterMovies: FilterMovieUseCase
 
     private var allMovies: [Movie] = []
     private var hasAttemptedInitialLoad = false
     private var searchTask: Task<Void, Never>?
+    private(set) var filter: MoviesFilter = MoviesFilter()
 
     var searchText: String = "" {
         didSet {
@@ -40,10 +42,12 @@ final class MoviesListViewModel {
 
     init(
         getMoviesPage: GetMoviesPageUseCase,
-        searchMovies: SearchMovieUseCase
+        searchMovies: SearchMovieUseCase,
+        filterMovies: FilterMovieUseCase
     ) {
         self.getMoviesPage = getMoviesPage
         self.searchMovies = searchMovies
+        self.filterMovies = filterMovies
     }
 
     func loadInitial() async {
@@ -126,7 +130,8 @@ final class MoviesListViewModel {
     }
 
     private func recomputeVisibleMovies() {
-        movies = searchMovies.execute(movies: allMovies, query: searchText)
+        let filteredMovies = filterMovies.execute(movies: allMovies, filter: filter)
+        movies = searchMovies.execute(movies: filteredMovies, query: searchText)
     }
 
     private func shouldLoadMore(for currentItem: Movie) -> Bool {
@@ -135,5 +140,11 @@ final class MoviesListViewModel {
         guard loadState != .loadingNextPage else { return false }
         guard movies.last?.id == currentItem.id else { return false }
         return true
+    }
+    
+    func updateFilter(_ newFilter: MoviesFilter) {
+        guard filter != newFilter else { return }
+        filter = newFilter
+        recomputeVisibleMovies()
     }
 }
