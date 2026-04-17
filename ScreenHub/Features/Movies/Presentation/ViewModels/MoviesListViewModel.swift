@@ -20,6 +20,17 @@ enum LoadState: Equatable {
 @Observable
 final class MoviesListViewModel {
     private let getMoviesPage: GetMoviesPageUseCase
+    private let searchMovies: SearchMovieUseCase
+
+    private var allMovies: [Movie] = []
+    private var hasAttemptedInitialLoad = false
+    private var searchTask: Task<Void, Never>?
+
+    var searchText: String = "" {
+        didSet {
+            scheduleSearchRecompute()
+        }
+    }
 
     private(set) var movies: [Movie] = []
     private(set) var loadState: LoadState = .idle
@@ -27,10 +38,12 @@ final class MoviesListViewModel {
     private(set) var hasMore: Bool = true
     private(set) var paginationErrorMessage: String?
 
-    private var hasAttemptedInitialLoad = false
-
-    init(getMoviesPage: GetMoviesPageUseCase) {
+    init(
+        getMoviesPage: GetMoviesPageUseCase,
+        searchMovies: SearchMovieUseCase
+    ) {
         self.getMoviesPage = getMoviesPage
+        self.searchMovies = searchMovies
     }
 
     func loadInitial() async {
@@ -58,7 +71,9 @@ final class MoviesListViewModel {
             let nextPage = currentPage + 1
             let response = try await getMoviesPage.execute(page: nextPage)
 
-            movies.append(contentsOf: response.movies)
+            allMovies.append(contentsOf: response.movies)
+            recomputeVisibleMovies()
+
             currentPage = response.page
             hasMore = response.hasMore
             loadState = .loaded
@@ -73,6 +88,7 @@ final class MoviesListViewModel {
 
         loadState = .loading
         paginationErrorMessage = nil
+        allMovies = []
         movies = []
         currentPage = 0
         hasMore = true
@@ -80,13 +96,37 @@ final class MoviesListViewModel {
         do {
             let response = try await getMoviesPage.execute(page: 1)
 
-            movies = response.movies
+            allMovies = response.movies
+            recomputeVisibleMovies()
+
             currentPage = response.page
             hasMore = response.hasMore
             loadState = .loaded
         } catch {
             loadState = .failed("Failed to load movies.")
         }
+    }
+
+    private func scheduleSearchRecompute() {
+        searchTask?.cancel()
+
+        let currentQuery = searchText
+
+        searchTask = Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(300))
+
+            guard !Task.isCancelled else { return }
+
+            await MainActor.run {
+                guard let self else { return }
+                guard self.searchText == currentQuery else { return }
+                self.recomputeVisibleMovies()
+            }
+        }
+    }
+
+    private func recomputeVisibleMovies() {
+        movies = searchMovies.execute(movies: allMovies, query: searchText)
     }
 
     private func shouldLoadMore(for currentItem: Movie) -> Bool {

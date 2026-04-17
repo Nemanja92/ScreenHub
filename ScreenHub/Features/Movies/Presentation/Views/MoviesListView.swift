@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Observation
 
 struct MoviesListView: View {
     
@@ -16,9 +17,12 @@ struct MoviesListView: View {
     }
     
     var body: some View {
+        @Bindable var bindableViewModel = viewModel
+        
         NavigationStack {
             content
                 .navigationTitle("Movies")
+                .searchable(text: $bindableViewModel.searchText, prompt: "Search movies")
         }
         .task {
             await viewModel.loadInitial()
@@ -35,7 +39,11 @@ struct MoviesListView: View {
             errorView(message: message)
             
         case .loaded, .loadingNextPage:
-            moviesListView
+            if shouldShowNoResults {
+                noResultsView
+            } else {
+                moviesListView
+            }
         }
     }
     
@@ -54,6 +62,19 @@ struct MoviesListView: View {
                     await viewModel.retryInitialLoad()
                 }
             }
+        }
+        .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+    
+    private var noResultsView: some View {
+        VStack(spacing: 12) {
+            Text("No results")
+                .font(.headline)
+            
+            Text("No movies found for \"\(viewModel.searchText)\"")
+                .multilineTextAlignment(.center)
+                .foregroundStyle(.secondary)
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -103,5 +124,10 @@ struct MoviesListView: View {
                 .listRowSeparator(.hidden)
             }
         }
+    }
+    
+    private var shouldShowNoResults: Bool {
+        let trimmedQuery = viewModel.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        return viewModel.movies.isEmpty && !trimmedQuery.isEmpty
     }
 }

@@ -17,13 +17,20 @@ enum CompositionRoot {
 
     @MainActor
     static func makeMoviesListViewModel() -> MoviesListViewModel {
-        MoviesListViewModel(getMoviesPage: makeGetMoviesPageUseCase())
+        MoviesListViewModel(
+            getMoviesPage: makeGetMoviesPageUseCase(),
+            searchMovies: makeSearchMoviesUseCase()
+        )
     }
 
     // MARK: - UseCases
 
     static func makeGetMoviesPageUseCase() -> GetMoviesPageUseCase {
         GetMoviesPageUseCaseImpl(repository: makeMoviesRepository())
+    }
+
+    static func makeSearchMoviesUseCase() -> SearchMovieUseCase {
+        SearchMovieUseCaseImpl()
     }
 
     // MARK: - Repositories
