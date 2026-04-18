@@ -25,6 +25,7 @@ struct MoviesListView: View {
             content
                 .navigationTitle("Movies")
                 .searchable(text: $bindableViewModel.searchText, prompt: "Search movies")
+                .refreshable { await viewModel.retryInitialLoad() }
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button {
