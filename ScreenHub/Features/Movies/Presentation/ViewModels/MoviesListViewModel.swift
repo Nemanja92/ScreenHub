@@ -90,6 +90,7 @@ final class MoviesListViewModel {
     private func reloadFromStart() async {
         guard loadState != .loading else { return }
 
+        searchTask?.cancel()
         loadState = .loading
         paginationErrorMessage = nil
         allMovies = []
@@ -144,6 +145,7 @@ final class MoviesListViewModel {
     
     func updateFilter(_ newFilter: MoviesFilter) {
         guard filter != newFilter else { return }
+        searchTask?.cancel()
         filter = newFilter
         recomputeVisibleMovies()
     }
