@@ -22,8 +22,15 @@ struct MoviesListViewModelTests {
         )
 
         let repository = FakeMoviesRepository(pages: [page1])
-        let useCase: GetMoviesPageUseCase = GetMoviesPageUseCaseImpl(repository: repository)
-        let viewModel = MoviesListViewModel(getMoviesPage: useCase)
+        let getMoviesPage = GetMoviesPageUseCaseImpl(repository: repository)
+        let searchMovies = SearchMovieUseCaseImpl()
+        let filterMovies = FilterMovieUseCaseImpl()
+
+        let viewModel = MoviesListViewModel(
+            getMoviesPage: getMoviesPage,
+            searchMovies: searchMovies,
+            filterMovies: filterMovies
+        )
 
         await viewModel.loadInitial()
 
@@ -52,9 +59,16 @@ struct MoviesListViewModelTests {
         )
 
         let repository = FakeMoviesRepository(pages: [page1, page2])
-        let useCase: GetMoviesPageUseCase = GetMoviesPageUseCaseImpl(repository: repository)
-        let viewModel = MoviesListViewModel(getMoviesPage: useCase)
+        let getMoviesPage = GetMoviesPageUseCaseImpl(repository: repository)
+        let searchMovies = SearchMovieUseCaseImpl()
+        let filterMovies = FilterMovieUseCaseImpl()
 
+        let viewModel = MoviesListViewModel(
+            getMoviesPage: getMoviesPage,
+            searchMovies: searchMovies,
+            filterMovies: filterMovies
+        )
+        
         await viewModel.loadInitial()
         await viewModel.loadMoreIfNeeded(currentItem: MovieFixtures.movieA)
 
@@ -79,8 +93,15 @@ struct MoviesListViewModelTests {
         )
 
         let repository = FakeMoviesRepository(pages: [page1])
-        let useCase: GetMoviesPageUseCase = GetMoviesPageUseCaseImpl(repository: repository)
-        let viewModel = MoviesListViewModel(getMoviesPage: useCase)
+        let getMoviesPage = GetMoviesPageUseCaseImpl(repository: repository)
+        let searchMovies = SearchMovieUseCaseImpl()
+        let filterMovies = FilterMovieUseCaseImpl()
+
+        let viewModel = MoviesListViewModel(
+            getMoviesPage: getMoviesPage,
+            searchMovies: searchMovies,
+            filterMovies: filterMovies
+        )
 
         await viewModel.loadInitial()
         await viewModel.loadMoreIfNeeded(currentItem: MovieFixtures.movieA)
@@ -106,8 +127,15 @@ struct MoviesListViewModelTests {
             pages: [page1],
             failingPages: [2]
         )
-        let useCase: GetMoviesPageUseCase = GetMoviesPageUseCaseImpl(repository: repository)
-        let viewModel = MoviesListViewModel(getMoviesPage: useCase)
+        let getMoviesPage = GetMoviesPageUseCaseImpl(repository: repository)
+        let searchMovies = SearchMovieUseCaseImpl()
+        let filterMovies = FilterMovieUseCaseImpl()
+
+        let viewModel = MoviesListViewModel(
+            getMoviesPage: getMoviesPage,
+            searchMovies: searchMovies,
+            filterMovies: filterMovies
+        )
 
         await viewModel.loadInitial()
         await viewModel.loadMoreIfNeeded(currentItem: MovieFixtures.movieA)
@@ -134,8 +162,15 @@ struct MoviesListViewModelTests {
             failingPages: [1],
             failOnlyOnce: true
         )
-        let useCase: GetMoviesPageUseCase = GetMoviesPageUseCaseImpl(repository: repository)
-        let viewModel = MoviesListViewModel(getMoviesPage: useCase)
+        let getMoviesPage = GetMoviesPageUseCaseImpl(repository: repository)
+        let searchMovies = SearchMovieUseCaseImpl()
+        let filterMovies = FilterMovieUseCaseImpl()
+
+        let viewModel = MoviesListViewModel(
+            getMoviesPage: getMoviesPage,
+            searchMovies: searchMovies,
+            filterMovies: filterMovies
+        )
 
         await viewModel.loadInitial()
 
@@ -150,11 +185,99 @@ struct MoviesListViewModelTests {
         #expect(viewModel.loadState == .loaded)
         #expect(repository.requestedPages == [1, 1])
     }
-}
 
-//
-// MARK: - Test Doubles
-//
+    @Test
+    @MainActor
+    func loadInitial_onlyLoadsOnce() async {
+        let page1 = MoviesPage(
+            movies: [MovieFixtures.movieA],
+            page: 1,
+            hasMore: true
+        )
+
+        let repository = FakeMoviesRepository(pages: [page1])
+        let getMoviesPage = GetMoviesPageUseCaseImpl(repository: repository)
+        let searchMovies = SearchMovieUseCaseImpl()
+        let filterMovies = FilterMovieUseCaseImpl()
+
+        let viewModel = MoviesListViewModel(
+            getMoviesPage: getMoviesPage,
+            searchMovies: searchMovies,
+            filterMovies: filterMovies
+        )
+
+        await viewModel.loadInitial()
+        await viewModel.loadInitial()
+
+        #expect(repository.requestedPages == [1])
+    }
+
+    @Test
+    @MainActor
+    func searchText_filtersMovies_afterDebounce() async {
+        let page1 = MoviesPage(
+            movies: [
+                MovieFixtures.movieA,
+                MovieFixtures.darkKnight,
+                MovieFixtures.movieB
+            ],
+            page: 1,
+            hasMore: false
+        )
+
+        let repository = FakeMoviesRepository(pages: [page1])
+        let getMoviesPage = GetMoviesPageUseCaseImpl(repository: repository)
+        let searchMovies = SearchMovieUseCaseImpl()
+        let filterMovies = FilterMovieUseCaseImpl()
+
+        let viewModel = MoviesListViewModel(
+            getMoviesPage: getMoviesPage,
+            searchMovies: searchMovies,
+            filterMovies: filterMovies
+        )
+
+        await viewModel.loadInitial()
+        viewModel.searchText = "dark"
+
+        try? await Task.sleep(for: .milliseconds(350))
+
+        #expect(viewModel.movies.map(\.id) == [MovieFixtures.darkKnight.id])
+    }
+
+    @Test
+    @MainActor
+    func searchText_usesLatestValue_whenTypingQuickly() async {
+        let page1 = MoviesPage(
+            movies: [
+                MovieFixtures.movieA,
+                MovieFixtures.darkKnight,
+                MovieFixtures.movieB
+            ],
+            page: 1,
+            hasMore: false
+        )
+
+        let repository = FakeMoviesRepository(pages: [page1])
+        let getMoviesPage = GetMoviesPageUseCaseImpl(repository: repository)
+        let searchMovies = SearchMovieUseCaseImpl()
+        let filterMovies = FilterMovieUseCaseImpl()
+
+        let viewModel = MoviesListViewModel(
+            getMoviesPage: getMoviesPage,
+            searchMovies: searchMovies,
+            filterMovies: filterMovies
+        )
+
+        await viewModel.loadInitial()
+
+        viewModel.searchText = "mov"
+        viewModel.searchText = "dark"
+
+        try? await Task.sleep(for: .milliseconds(350))
+
+        #expect(viewModel.movies.map(\.id) == [MovieFixtures.darkKnight.id])
+    }
+}
 
 private enum FakeRepositoryError: Error {
     case forcedFailure
@@ -200,10 +323,6 @@ private final class FakeMoviesRepository: MoviesRepository {
     }
 }
 
-//
-// MARK: - Fixtures
-//
-
 private enum MovieFixtures {
 
     static let movieA = Movie(
@@ -234,5 +353,20 @@ private enum MovieFixtures {
         directors: ["Director B"],
         cast: ["Actor B"],
         releaseDate: "2021-01-01"
+    )
+
+    static let darkKnight = Movie(
+        id: "dark_knight",
+        title: "The Dark Knight",
+        year: 2008,
+        runtimeMinutes: 152,
+        genres: ["Action", "Crime"],
+        plot: "Batman faces the Joker.",
+        posterUrl: URL(string: "https://example.com/darkknight.jpg"),
+        trailerUrl: URL(string: "https://example.com/darkknight.mp4"),
+        rating: 9.0,
+        directors: ["Christopher Nolan"],
+        cast: ["Christian Bale", "Heath Ledger"],
+        releaseDate: "2008-07-18"
     )
 }
